@@ -43,6 +43,8 @@ class SimulatedAnnealing:
         self.min_weight = self.curr_weight
 
         self.weight_list = [self.curr_weight]
+        self.accept_list = []
+        self.temp_list = []
 
         print('Intial weight: ', self.curr_weight)
 
@@ -65,18 +67,24 @@ class SimulatedAnnealing:
         current solution, else accept with probability equal to the
         acceptance_probability()
         '''
+        rnt = False
         candidate_weight = self.weight(candidate)
         if candidate_weight < self.curr_weight:
+            rnt = True
             self.curr_weight = candidate_weight
             self.curr_solution = candidate
+            self.accept_list.append(1)
             if candidate_weight < self.min_weight:
                 self.min_weight = candidate_weight
                 self.best_solution = candidate
 
         else:
-            if random.random() < self.acceptance_probability(candidate_weight):
+            accpt_rate = self.acceptance_probability(candidate_weight)
+            self.accept_list.append(accpt_rate)
+            if random.random() < accpt_rate:
                 self.curr_weight = candidate_weight
                 self.curr_solution = candidate
+        return rnt
 
     def anneal(self):
         '''
@@ -84,24 +92,29 @@ class SimulatedAnnealing:
         described here: https://en.wikipedia.org/wiki/2-opt
         '''
         while self.temp >= self.stopping_temp and self.iteration < self.stopping_iter:
+            
             candidate = list(self.curr_solution)
             l = random.randint(2, self.sample_size - 1)
             i = random.randint(0, self.sample_size - l)
-
             candidate[i: (i + l)] = reversed(candidate[i: (i + l)])
 
-            self.accept(candidate)
-            self.temp *= self.alpha
-            self.iteration += 1
+            if self.accept(candidate):
+                self.temp *= self.alpha
+            else:
+                self.iteration += 1
+
+            self.temp_list.append(self.temp)
             self.weight_list.append(self.curr_weight)
             self.solution_history.append(self.curr_solution)
 
         print('Minimum weight: ', self.min_weight)
         print('Improvement: ',
               round((self.initial_weight - self.min_weight) / (self.initial_weight), 4) * 100, '%')
+        print("temp: ", self.temp)
+        print("iteration: ", self.iteration)
 
     def animateSolutions(self):
-        animated_visualizer.animateTSP(self.solution_history, self.coords)
+        animated_visualizer.animateTSP(self.solution_history, self.coords, self.accept_list, self.temp_list, self.weight_list, self.iteration)
 
     def plotLearning(self):
         plt.plot([i for i in range(len(self.weight_list))], self.weight_list)

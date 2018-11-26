@@ -5,9 +5,9 @@ from simulated_annealing import SimulatedAnnealing
 def main():
     '''set the simulated annealing algorithm params'''
     temp = 1000
-    stopping_temp = 0.00000001
+    stopping_temp = 0.01
     alpha = 0.9995
-    stopping_iter = 10000000
+    stopping_iter = 100000
 
     '''set the dimensions of the grid'''
     size_width = 200
